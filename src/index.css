@@ -6,6 +6,8 @@
 All colors MUST be HSL and follow Sparklight brand guidelines.
 */
 
+@import url('https://fonts.googleapis.com/css2?family=Effra:wght@300;400;700&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -68,29 +70,41 @@ All colors MUST be HSL and follow Sparklight brand guidelines.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 208 14% 12%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 208 14% 15%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 208 14% 15%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Sparklight Bright Purple for dark mode */
+    --primary: 296 45% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Sparklight Gray adjusted for dark */
+    --secondary: 208 14% 25%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 208 14% 18%;
+    --muted-foreground: 208 14% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Sparklight Bright Blue for dark */
+    --accent: 188 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Sparklight Red for dark */
+    --destructive: 6 84% 59%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Sparklight Bright Green for dark */
+    --success: 85 52% 55%;
+    --success-foreground: 0 0% 100%;
+
+    /* Sparklight Yellow for dark */
+    --warning: 44 100% 70%;
+    --warning-foreground: 208 14% 15%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
@@ -113,5 +127,6 @@ All colors MUST be HSL and follow Sparklight brand guidelines.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Effra', Arial, sans-serif;
   }
 }
