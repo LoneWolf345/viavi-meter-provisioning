@@ -43,7 +43,7 @@ export function MacStatusTable({ macs, onStatusUpdated, showProvisionColumn = fa
         );
       case 'found':
         return (
-          <Badge variant="destructive" className="gap-1">
+          <Badge variant="warning" className="gap-1">
             <AlertTriangle className="h-3 w-3" />
             Exists
           </Badge>
