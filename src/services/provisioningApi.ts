@@ -1,5 +1,9 @@
 /**
- * API service for MAC provisioning operations
+ * API service for MAC provisioning operations.
+ *
+ * The API is configured at application startup using values from Vite
+ * environment variables. See `provisioningApi.configure` in `main.tsx` for
+ * details.
  */
 
 export interface MacSearchResult {

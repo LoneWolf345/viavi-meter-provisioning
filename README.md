@@ -60,6 +60,15 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Environment Variables
+
+The application relies on the following Vite environment variables:
+
+- `VITE_API_BASE_URL` – Base URL for the provisioning API. Defaults to `https://ldap-api.apps.prod-ocp4.corp.cableone.net/`.
+- `VITE_USE_STUB_API` – When set to `true`, the app uses a stubbed API for development. Production builds use `.env.production` which sets this to `false`.
+
+The default development values are defined in `.env` while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and click on Share -> Publish.
