@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: viavi-meter-provisioning
+spec:
+  host: meter-provisioning.example.com
+  to:
+    kind: Service
+    name: viavi-meter-provisioning
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
