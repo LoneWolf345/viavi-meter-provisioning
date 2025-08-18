@@ -3,7 +3,7 @@ kind: Route
 metadata:
   name: viavi-meter-provisioning
 spec:
-  host: meter-provisioning.example.com
+  # host: meter-provisioning.example.com  # optional
   to:
     kind: Service
     name: viavi-meter-provisioning
