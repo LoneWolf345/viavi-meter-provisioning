@@ -11,9 +11,7 @@ RUN npm run build
 # Runtime stage
 FROM registry.access.redhat.com/ubi9/nodejs-20
 WORKDIR /opt/app-root/src
-ENV NODE_ENV=production \
-    PORT=8080 \
-    HOME=/opt/app-root/home
 COPY --from=builder /opt/app-root/src/dist ./dist
+ENV NODE_ENV=production PORT=8080 HOME=/opt/app-root/home
 EXPOSE 8080
-CMD ["node", "dist/server.js"]
+CMD ["npx", "vite", "preview", "--port", "8080", "--strictPort"]
