@@ -68,6 +68,42 @@ supabase gen typescript --linked --output src/integrations/supabase/client.ts
 
 ## Environment Variables
 - `VITE_API_BASE_URL` – Base URL for the provisioning API. Defaults to `https://ldap-api.apps.prod-ocp4.corp.cableone.net/`.
-- `VITE_USE_STUB_API` – When set to `true`, uses a stubbed API for development. Production builds use `.env.production` which sets this to `false`.
+- `VITE_USE_STUB_API` – When set to `true`, the app uses a stubbed API for development. Production builds use `.env.production` which sets this to `false`.
+
+The default development values are defined in `.env` while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
+
+## Testing
+
+### Unit tests
+
+Run the unit test suite with Vitest:
+
+```sh
+npm run test
+```
+
+### End-to-end tests
+
+Integration style end-to-end tests live under `src/e2e`.
+Execute them separately by passing the directory to Vitest:
+
+```sh
+npm run test src/e2e
+```
+
+### Coverage plan
+
+- Stub API service paths are covered by unit tests.
+- Future work: expand e2e tests to include failure scenarios such as invalid OUIs and server errors.
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Development defaults live in `.env`, while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
