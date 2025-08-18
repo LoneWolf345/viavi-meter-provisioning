@@ -11,6 +11,12 @@ import { provisioningApi } from '@/services/provisioningApi';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Network, CheckCircle, X } from 'lucide-react';
 
+interface ProvisionDefaults {
+  account: string;
+  isp: string;
+  configfiles: string[];
+}
+
 export function ProvisioningPage() {
   const [currentStep, setCurrentStep] = useState<'input' | 'status' | 'provisioning'>('input');
   const [baseMac, setBaseMac] = useState('');
@@ -18,13 +24,13 @@ export function ProvisioningPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [statusError, setStatusError] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [provisionDefaults, setProvisionDefaults] = useState<any>(null);
+  const [provisionDefaults, setProvisionDefaults] = useState<ProvisionDefaults | null>(null);
   const { toast } = useToast();
 
-  const loadProvisionDefaults = async () => {
+  const loadProvisionDefaults = async (): Promise<ProvisionDefaults | null> => {
     try {
       const response = await fetch('/config/provision-defaults.json');
-      const defaults = await response.json();
+      const defaults: ProvisionDefaults = await response.json();
       setProvisionDefaults(defaults);
       return defaults;
     } catch (error) {
@@ -130,11 +136,9 @@ export function ProvisioningPage() {
     setShowConfirmDialog(false);
     setCurrentStep('provisioning');
 
-    if (!provisionDefaults) {
-      const defaults = await loadProvisionDefaults();
-      if (!defaults) return;
-      setProvisionDefaults(defaults);
-    }
+    const defaults = provisionDefaults ?? await loadProvisionDefaults();
+    if (!defaults) return;
+    setProvisionDefaults(defaults);
 
     const updatedMacs = [...macs];
     let successCount = 0;
@@ -150,9 +154,9 @@ export function ProvisioningPage() {
       try {
         const request = {
           mac: updatedMacs[i].mac,
-          account: provisionDefaults.account,
+          account: defaults.account,
           configfile: updatedMacs[i].configfile,
-          isp: provisionDefaults.isp
+          isp: defaults.isp
         };
 
         const result = await provisioningApi.addHsd(request);

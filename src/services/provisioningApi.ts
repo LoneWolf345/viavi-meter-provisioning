@@ -11,7 +11,7 @@ export interface MacSearchResult {
   account: string;
   configfile: string;
   isp: string;
-  customFields?: any;
+  customFields?: Record<string, unknown>;
 }
 
 export interface ProvisionRequest {

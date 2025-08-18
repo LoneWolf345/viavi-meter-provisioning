@@ -13,7 +13,7 @@ export interface MacStatus {
     account: string;
     configfile: string;
     isp: string;
-    customFields?: any;
+    customFields?: Record<string, unknown>;
   };
   error?: string;
   provisionState: 'pending' | 'provisioning' | 'complete' | 'error';
