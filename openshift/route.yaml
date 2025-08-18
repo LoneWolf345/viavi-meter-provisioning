@@ -1,3 +1,4 @@
+# Routes external traffic to the service with TLS termination
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
