@@ -100,6 +100,8 @@ npm run test src/e2e
 
 Simply open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and click on Share -> Publish.
 
+For cluster deployment on OpenShift using the `oc` CLI and Tekton pipelines, see the [OpenShift deployment guide](docs/openshift-deployment.md).
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
