@@ -19,57 +19,57 @@ spec:
       serviceAccountName: viavi-meter-provisioning
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
-        fsGroup: 1001
+        runAsUser: 1001580000
+        runAsGroup: 10000
+        fsGroup: 10000
         seLinuxOptions:
-          level: "s0:c123,c456"
+          level: "s0:c40,c10"
         supplementalGroups:
-        - 1001
+          - 10000
       containers:
-      - name: viavi-meter-provisioning
-        image: registry.access.redhat.com/ubi9/nodejs-20
-        ports:
-        - containerPort: 8080
-          name: http
-        env:
-        - name: NODE_ENV
-          value: "production"
-        - name: PORT
-          value: "8080"
-        - name: HOME
-          value: "/opt/app-root/home"
-        - name: VITE_SUPABASE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: VITE_SUPABASE_URL
-        - name: VITE_SUPABASE_ANON_KEY
-          valueFrom:
-            secretKeyRef:
-              name: app-secrets
-              key: VITE_SUPABASE_ANON_KEY
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 15
-        resources:
-          requests:
-            cpu: 200m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
+        - name: viavi-meter-provisioning
+          image: registry.access.redhat.com/ubi9/nodejs-20
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8080"
+            - name: HOME
+              value: "/opt/app-root/home"
+            - name: VITE_SUPABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: VITE_SUPABASE_URL
+            - name: VITE_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: VITE_SUPABASE_ANON_KEY
+          ports:
+            - containerPort: 8080
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
