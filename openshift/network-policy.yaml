@@ -1,4 +1,4 @@
-# Allow ingress traffic from the OpenShift router
+# Allow ingress traffic from the OpenShift router; all other ingress is denied
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

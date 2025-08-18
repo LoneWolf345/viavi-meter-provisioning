@@ -20,15 +20,15 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001580000
-        runAsGroup: 10000
-        fsGroup: 10000
+        runAsGroup: 1001580000
+        fsGroup: 1001580000
         seLinuxOptions:
           level: "s0:c40,c10"
         supplementalGroups:
-          - 10000
+          - 1001580000
       containers:
         - name: viavi-meter-provisioning
-          image: registry.access.redhat.com/ubi9/nodejs-20
+          image: image-registry.openshift-image-registry.svc:5000/project/viavi-meter-provisioning:latest
           env:
             - name: NODE_ENV
               value: "production"
@@ -36,6 +36,16 @@ spec:
               value: "8080"
             - name: HOME
               value: "/opt/app-root/home"
+            - name: VITE_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: VITE_API_BASE_URL
+            - name: VITE_USE_STUB_API
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: VITE_USE_STUB_API
             - name: VITE_SUPABASE_URL
               valueFrom:
                 configMapKeyRef:
