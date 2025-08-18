@@ -69,6 +69,30 @@ The application relies on the following Vite environment variables:
 
 The default development values are defined in `.env` while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
 
+## Testing
+
+### Unit tests
+
+Run the unit test suite with Vitest:
+
+```sh
+npm run test
+```
+
+### End-to-end tests
+
+Integration style end-to-end tests live under `src/e2e`.
+Execute them separately by passing the directory to Vitest:
+
+```sh
+npm run test src/e2e
+```
+
+### Coverage plan
+
+- Stub API service paths are covered by unit tests.
+- Future work: expand e2e tests to include failure scenarios such as invalid OUIs and server errors.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and click on Share -> Publish.
