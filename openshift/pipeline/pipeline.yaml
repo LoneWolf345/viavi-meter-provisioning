@@ -1,0 +1,106 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: build-and-deploy
+spec:
+  params:
+    - name: git-url
+      type: string
+    - name: git-revision
+      type: string
+      default: main
+    - name: image-url
+      type: string
+  workspaces:
+    - name: shared-workspace
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+    - name: npm-ci
+      runAfter:
+        - clone-repo
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: npm-ci
+            image: node:20
+            workingDir: $(workspaces.source.path)
+            script: |
+              npm ci
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: lint
+      runAfter:
+        - npm-ci
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: lint
+            image: node:20
+            workingDir: $(workspaces.source.path)
+            script: |
+              npm run lint
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: test
+      runAfter:
+        - lint
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: test
+            image: node:20
+            workingDir: $(workspaces.source.path)
+            script: |
+              npm run test -- --run
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: build-image
+      runAfter:
+        - test
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: $(params.image-url)
+        - name: CONTEXT
+          value: $(workspaces.source.path)
+        - name: DOCKERFILE
+          value: $(workspaces.source.path)/Dockerfile
+        - name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: apply-manifests
+      runAfter:
+        - build-image
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: oc-apply
+            image: quay.io/openshift/origin-cli:latest
+            workingDir: $(workspaces.source.path)
+            script: |
+              oc apply -f openshift
+      workspaces:
+        - name: source
+          workspace: shared-workspace
