@@ -1,69 +1,72 @@
-# Welcome to your Lovable project
+# VIAVI Meter Provisioning
 
-## Project info
+## Project Overview
+This web application validates sequential MAC addresses and provisions them through a provisioning API. It is built with Vite, React, and TypeScript with a component-driven architecture using shadcn-ui and Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf
+### Architecture
+- **Vite + React + TypeScript** for the core application stack.
+- **React Router** manages routing between pages in `src/pages`.
+- **@tanstack/react-query** handles server state and caching.
+- **shadcn-ui / Radix UI** and **Tailwind CSS** provide the UI foundation.
+- **Supabase** supplies backend services through a generated client and types.
 
-## How can I edit this code?
+## Getting Started
+1. Install dependencies:
+   ```sh
+   npm install
+   ```
+2. Start the development server:
+   ```sh
+   npm run dev
+   ```
+3. Create a production build:
+   ```sh
+   npm run build
+   ```
+4. Run tests:
+   ```sh
+   npm run test            # Vitest in watch mode
+   npm run test -- --run   # Single run for CI
+   ```
+5. Lint the codebase:
+   ```sh
+   npm run lint
+   ```
 
-There are several ways of editing your application.
+## Directory Structure
+- `src/components` – Reusable React components and UI primitives.
+- `src/pages` – Top-level route components used by React Router.
+- `src/services` – API clients such as the provisioning API wrapper.
+- `src/hooks` – Custom React hooks.
+- `src/integrations` – Third-party integrations like Supabase (`client.ts`, `types.ts`).
+- `src/utils` – Shared utility functions.
+- `src/e2e` – High-level end-to-end tests executed with Vitest.
+- `src/test` – Testing utilities and setup.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+## Testing
+### Vitest
+All unit, integration, and e2e tests run with [Vitest](https://vitest.dev/).
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm run test            # watch mode
+npm run test -- --run   # single run for CI
 ```
 
-**Edit a file directly in GitHub**
+### End-to-End
+End-to-end flow tests live in `src/e2e` and run with the same Vitest command—no additional runner is required.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Supabase Types and Client
+Database types and a typed Supabase client are generated with the [Supabase CLI](https://supabase.com/docs/guides/api/generating-types). The project ID is stored in `supabase/config.toml`.
+```sh
+npm install -g supabase
+supabase login
+supabase link --project-ref <project_id>
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Generate updated database types and client
+supabase gen types typescript --linked > src/integrations/supabase/types.ts
+supabase gen typescript --linked --output src/integrations/supabase/client.ts
+```
 
 ## Environment Variables
-
-The application relies on the following Vite environment variables:
-
 - `VITE_API_BASE_URL` – Base URL for the provisioning API. Defaults to `https://ldap-api.apps.prod-ocp4.corp.cableone.net/`.
 - `VITE_USE_STUB_API` – When set to `true`, the app uses a stubbed API for development. Production builds use `.env.production` which sets this to `false`.
 
@@ -103,4 +106,4 @@ Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Development defaults live in `.env`, while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
