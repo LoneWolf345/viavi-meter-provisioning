@@ -8,11 +8,11 @@ spec:
     name: build-and-deploy
   params:
     - name: git-url
-      value: https://github.com/example/repo.git
+      value: https://github.com/LoneWolf345/viavi-meter-provisioning.git
     - name: git-revision
       value: main
     - name: image-url
-      value: image-registry.openshift-image-registry.svc:5000/project/app:latest
+      value: image-registry.openshift-image-registry.svc:5000/viavi-meter-provisioning/viavi-meter-provisioning:latest
   workspaces:
     - name: shared-workspace
       persistentVolumeClaim:

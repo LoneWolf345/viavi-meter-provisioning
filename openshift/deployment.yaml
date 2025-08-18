@@ -28,7 +28,7 @@ spec:
           - 1001580000
       containers:
         - name: viavi-meter-provisioning
-          image: image-registry.openshift-image-registry.svc:5000/project/viavi-meter-provisioning:latest
+          image: image-registry.openshift-image-registry.svc:5000/viavi-meter-provisioning/viavi-meter-provisioning:latest
           env:
             - name: NODE_ENV
               value: "production"

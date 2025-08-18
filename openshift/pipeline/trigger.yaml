@@ -17,7 +17,9 @@ spec:
   params:
     - name: git-url
     - name: git-revision
+      default: main
     - name: image-url
+      default: image-registry.openshift-image-registry.svc:5000/viavi-meter-provisioning/viavi-meter-provisioning:latest
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
