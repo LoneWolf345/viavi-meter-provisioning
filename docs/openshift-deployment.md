@@ -10,7 +10,7 @@ Ensure you are logged in to the target cluster with the `oc` CLI and then apply 
 oc apply -f openshift/
 ```
 
-## Required Configuration
+## Required Environment Variables and Secrets
 
 Create a ConfigMap and Secret to supply runtime configuration and credentials:
 
@@ -49,17 +49,16 @@ Run the pipeline manually with:
 oc create -f openshift/pipeline/pipeline-run.yaml
 ```
 
-## Triggering on Git Commits
+## Configure Route and Webhook Trigger
 
-`trigger.yaml` installs an EventListener that responds to GitHub push events and starts the pipeline.
-
-1. Expose the EventListener service to create a webhook endpoint:
+Expose the application and Tekton EventListener via routes:
 
 ```sh
+# Application route
+oc apply -f openshift/route.yaml
+
+# EventListener route for Git webhooks
 oc expose service el-github-listener
 ```
 
-2. In your Git hosting service, create a webhook pointing to the route URL and enable **push** events.
-
-When commits are pushed, the webhook calls the EventListener and a new `PipelineRun` is created to build the image and apply the manifests.
-
+In your Git hosting service, create a webhook pointing to the EventListener route URL and enable **push** events. When commits are pushed, the webhook calls the EventListener and a new `PipelineRun` is created to build the image and apply the manifests.
