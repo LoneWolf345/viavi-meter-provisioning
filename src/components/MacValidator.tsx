@@ -7,7 +7,8 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 interface MacValidatorProps {
   onValidated: (mac: string) => void;
   isLoading?: boolean;
-}
+  }
+
 
 export function MacValidator({ onValidated, isLoading = false }: MacValidatorProps) {
   const [mac, setMac] = useState('');

@@ -17,7 +17,8 @@ export interface MacStatus {
   };
   error?: string;
   provisionState: 'pending' | 'provisioning' | 'complete' | 'error';
-}
+  }
+
 
 interface MacStatusTableProps {
   macs: MacStatus[];

@@ -48,6 +48,7 @@ export function generateSequentialMacs(baseMac: string): MacGenerationResult {
       error: 'Failed to generate sequential MACs: ' + (error as Error).message
     };
   }
+
 }
 
 /**
