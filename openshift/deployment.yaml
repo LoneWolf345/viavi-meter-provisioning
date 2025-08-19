@@ -18,17 +18,16 @@ spec:
     spec:
       serviceAccountName: viavi-meter-provisioning
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001580000
-        runAsGroup: 1001580000
-        fsGroup: 1001580000
+        fsGroup: 0
+        supplementalGroups: [1002290000]
         seLinuxOptions:
-          level: "s0:c40,c10"
-        supplementalGroups:
-          - 1001580000
+          level: s0:c48,c17
+        runAsNonRoot: true
+        runAsUser: 1002290000
       containers:
         - name: viavi-meter-provisioning
           image: image-registry.openshift-image-registry.svc:5000/viavi-meter-provisioning/viavi-meter-provisioning:latest
+          imagePullPolicy: Always
           env:
             - name: NODE_ENV
               value: "production"
@@ -59,18 +58,32 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
+            timeoutSeconds: 3
             periodSeconds: 30
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
               port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 15
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 3
           resources:
             requests:
               cpu: 200m
@@ -83,3 +96,8 @@ spec:
             capabilities:
               drop:
                 - ALL
+            runAsNonRoot: true
+            runAsUser: 1002290000
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
