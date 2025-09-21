@@ -14,3 +14,29 @@
     font-family: 'Effra', Arial, sans-serif;
   }
 }
+
+@layer components {
+  .prose-brand {
+    @apply text-muted-foreground leading-relaxed space-y-6;
+  }
+
+  .prose-brand :where(h1, h2, h3, h4, h5, h6) {
+    @apply text-foreground font-semibold tracking-tight;
+  }
+
+  .prose-brand a {
+    @apply text-primary underline underline-offset-4 hover:text-primary/80;
+  }
+
+  .prose-brand code {
+    @apply rounded-md bg-muted px-1.5 py-1 font-mono text-sm text-foreground;
+  }
+
+  .prose-brand ul {
+    @apply list-disc space-y-2 pl-6 text-foreground;
+  }
+
+  .prose-brand ol {
+    @apply list-decimal space-y-2 pl-6 text-foreground;
+  }
+}

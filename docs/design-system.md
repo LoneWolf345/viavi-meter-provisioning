@@ -73,3 +73,16 @@ body {
 ## Extending locally
 
 Keep any product-specific extensions (additional colors, fonts, or animations) in your app’s `tailwind.config.ts` via `theme.extend`. Because the preset is additive, Tailwind will merge your overrides with the shared system.
+
+## Token-aware prose helpers
+
+For marketing copy or documentation surfaces, wrap rich text in the `.prose-brand` helper defined in `src/index.css`:
+
+```tsx
+<article className="prose-brand">
+  <h1>Provisioning checklist</h1>
+  <p>Use semantic tokens for every component.</p>
+</article>
+```
+
+The helper is implemented with Tailwind utilities and Sparklight CSS variables, ensuring color, spacing, and typography match the current light or dark theme without reviving the old `App.css` styles.

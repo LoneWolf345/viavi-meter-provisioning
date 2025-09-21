@@ -31,6 +31,19 @@ sequenceDiagram
 
 With those pieces wired up, you can build features exclusively with semantic Tailwind tokens such as `bg-primary`, `text-muted-foreground`, and `rounded-lg` while keeping local overrides close to your app’s Tailwind configuration.
 
+### Global helpers
+
+The legacy `src/App.css` starter styles have been removed so new screens always inherit the design tokens. Compose layout and spacing with Tailwind utilities directly in your components or opt into the shared `.prose-brand` helpers defined in `src/index.css`:
+
+```tsx
+<section className="prose-brand">
+  <h2>Provision faster</h2>
+  <p>Tailwind tokens keep typography, color, and spacing on brand.</p>
+</section>
+```
+
+The `.prose-brand` utilities expand to tokenized CSS variables, so typography automatically follows the active Sparklight theme without reintroducing ad-hoc colors.
+
 ## Getting Started
 1. Install dependencies:
    ```sh
