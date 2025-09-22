@@ -10,40 +10,6 @@ This web application validates sequential MAC addresses and provisions them thro
 - **shadcn-ui / Radix UI** and **Tailwind CSS** provide the UI foundation.
 - **Supabase** supplies backend services through a generated client and types.
 
-## Design system
-The Sparklight design system supplies CSS tokens, Tailwind primitives, and typography so every touchpoint feels consistent. Review the full guidance in [docs/design-system.md](docs/design-system.md) and follow the quick-start below.
-
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant CSS as CSS tokens
-    participant TW as Tailwind preset
-    participant UI as App UI
-    Dev->>CSS: Import sparklight-theme.css
-    Dev->>TW: Add sparklight preset to Tailwind config
-    TW-->>UI: Provide tokenized utilities
-    CSS-->>UI: Expose design variables & Effra font
-```
-
-1. **Install the preset:** Copy `presets/sparklight.preset.ts` into your project (or add it as a package) and reference it via `presets: [require("./presets/sparklight.preset")]` (CommonJS) or an ES module import in `tailwind.config.ts`.
-2. **Import the CSS tokens:** Add `@import "./styles/sparklight-theme.css";` to your global stylesheet before Tailwind utilities so variables like `--primary` resolve correctly.
-3. **Align typography:** Use the provided `font-sans`/`font-effra` utilities or set `font-family: "Effra", Arial, sans-serif;` on the `<body>` element to match Sparklight’s brand voice.
-
-With those pieces wired up, you can build features exclusively with semantic Tailwind tokens such as `bg-primary`, `text-muted-foreground`, and `rounded-lg` while keeping local overrides close to your app’s Tailwind configuration.
-
-### Global helpers
-
-The legacy `src/App.css` starter styles have been removed so new screens always inherit the design tokens. Compose layout and spacing with Tailwind utilities directly in your components or opt into the shared `.prose-brand` helpers defined in `src/index.css`:
-
-```tsx
-<section className="prose-brand">
-  <h2>Provision faster</h2>
-  <p>Tailwind tokens keep typography, color, and spacing on brand.</p>
-</section>
-```
-
-The `.prose-brand` utilities expand to tokenized CSS variables, so typography automatically follows the active Sparklight theme without reintroducing ad-hoc colors.
-
 ## Getting Started
 1. Install dependencies:
    ```sh

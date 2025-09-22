@@ -2,7 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "./styles/sparklight-theme.css";
+/* Sparklight Design System - Professional MAC Provisioning Tool
+All colors MUST be HSL and follow Sparklight brand guidelines.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Effra:wght@300;400;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 208 14% 29%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 208 14% 29%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 208 14% 29%;
+
+    /* Sparklight Bright Purple #8D3B90 as primary */
+    --primary: 296 32% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Sparklight Gray #4C5458 as secondary */
+    --secondary: 208 14% 32%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 208 14% 45%;
+
+    /* Sparklight Bright Blue #00B8D8 as accent */
+    --accent: 188 100% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Sparklight Red for destructive */
+    --destructive: 6 84% 59%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Sparklight Bright Green for success */
+    --success: 85 52% 51%;
+    --success-foreground: 0 0% 100%;
+
+    /* Sparklight Yellow for warning */
+    --warning: 44 100% 65%;
+    --warning-foreground: 208 14% 29%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 296 32% 39%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 208 14% 12%;
+    --foreground: 0 0% 98%;
+
+    --card: 208 14% 15%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 208 14% 15%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Sparklight Bright Purple for dark mode */
+    --primary: 296 45% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Sparklight Gray adjusted for dark */
+    --secondary: 208 14% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 208 14% 18%;
+    --muted-foreground: 208 14% 65%;
+
+    /* Sparklight Bright Blue for dark */
+    --accent: 188 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Sparklight Red for dark */
+    --destructive: 6 84% 59%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Sparklight Bright Green for dark */
+    --success: 85 52% 55%;
+    --success-foreground: 0 0% 100%;
+
+    /* Sparklight Yellow for dark */
+    --warning: 44 100% 70%;
+    --warning-foreground: 208 14% 15%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
 
 @layer base {
   * {
@@ -12,31 +128,5 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Effra', Arial, sans-serif;
-  }
-}
-
-@layer components {
-  .prose-brand {
-    @apply text-muted-foreground leading-relaxed space-y-6;
-  }
-
-  .prose-brand :where(h1, h2, h3, h4, h5, h6) {
-    @apply text-foreground font-semibold tracking-tight;
-  }
-
-  .prose-brand a {
-    @apply text-primary underline underline-offset-4 hover:text-primary/80;
-  }
-
-  .prose-brand code {
-    @apply rounded-md bg-muted px-1.5 py-1 font-mono text-sm text-foreground;
-  }
-
-  .prose-brand ul {
-    @apply list-disc space-y-2 pl-6 text-foreground;
-  }
-
-  .prose-brand ol {
-    @apply list-decimal space-y-2 pl-6 text-foreground;
   }
 }
