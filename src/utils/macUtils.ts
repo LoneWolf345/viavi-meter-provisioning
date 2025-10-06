@@ -2,55 +2,6 @@
  * MAC address utilities for the provisioning tool
  */
 
-export interface MacGenerationResult {
-  success: boolean;
-  macs?: string[];
-  error?: string;
-}
-
-/**
- * Generates sequential MAC addresses (+1, +2, +3) from a base MAC
- * Uses 48-bit big-endian arithmetic across the full address
- */
-export function generateSequentialMacs(baseMac: string): MacGenerationResult {
-  try {
-    // Remove colons and convert to number
-    const cleanMac = baseMac.replace(/:/g, '');
-    const baseNumber = BigInt('0x' + cleanMac);
-    
-    const macs: string[] = [];
-    
-    // Generate base + 0, +1, +2, +3
-    for (let i = 0; i < 4; i++) {
-      const newNumber = baseNumber + BigInt(i);
-      
-      // Check for overflow (48-bit limit)
-      if (newNumber > BigInt('0xFFFFFFFFFFFF')) {
-        return {
-          success: false,
-          error: `MAC overflow: Cannot generate MAC +${i} (exceeds 48-bit limit)`
-        };
-      }
-      
-      // Convert back to MAC format
-      const hex = newNumber.toString(16).toUpperCase().padStart(12, '0');
-      const formattedMac = hex.match(/.{2}/g)?.join(':') || '';
-      macs.push(formattedMac);
-    }
-    
-    return {
-      success: true,
-      macs
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Failed to generate sequential MACs: ' + (error as Error).message
-    };
-  }
-
-}
-
 /**
  * Validates MAC address format (colon-separated, uppercase hex)
  */

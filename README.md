@@ -1,7 +1,7 @@
 # VIAVI Meter Provisioning
 
 ## Project Overview
-This web application validates sequential MAC addresses and provisions them through a provisioning API. It is built with Vite, React, and TypeScript with a component-driven architecture using shadcn-ui and Tailwind CSS.
+This web application validates a MAC address and provisions it through a provisioning API. It is built with Vite, React, and TypeScript with a component-driven architecture using shadcn-ui and Tailwind CSS.
 
 ### Architecture
 - **Vite + React + TypeScript** for the core application stack.

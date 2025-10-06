@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeMac, extractOui, generateSequentialMacs, validateMacFormat } from './macUtils';
+import { normalizeMac, extractOui, validateMacFormat } from './macUtils';
 
 describe('macUtils', () => {
   it('normalizes various MAC inputs to colon-separated uppercase', () => {
@@ -14,22 +14,5 @@ describe('macUtils', () => {
   it('validates MAC format correctly', () => {
     expect(validateMacFormat('AA:BB:CC:DD:EE:FF')).toBe(true);
     expect(validateMacFormat('AA-BB-CC-DD-EE-FF')).toBe(false);
-  });
-
-  it('generates sequential MACs within 48-bit limit', () => {
-    const result = generateSequentialMacs('00:00:00:00:00:00');
-    expect(result.success).toBe(true);
-    expect(result.macs).toEqual([
-      '00:00:00:00:00:00',
-      '00:00:00:00:00:01',
-      '00:00:00:00:00:02',
-      '00:00:00:00:00:03'
-    ]);
-  });
-
-  it('fails when sequential generation exceeds 48-bit limit', () => {
-    const result = generateSequentialMacs('FF:FF:FF:FF:FF:FF');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('overflow');
   });
 });

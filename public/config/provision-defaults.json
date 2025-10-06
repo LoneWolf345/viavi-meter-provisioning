@@ -1,5 +1,5 @@
 {
   "account": "ViaviMeter",
   "isp": "CableOne",
-  "configfiles": ["r-200-10", "r-100-3", "r-1000-50", "c-200-20"]
+  "configfile": "r-200-10"
 }

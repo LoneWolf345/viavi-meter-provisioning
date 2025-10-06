@@ -13,12 +13,13 @@ vi.mock('@/services/provisioningApi', () => ({
 import { provisioningApi } from '@/services/provisioningApi';
 
 const setupFetch = (options: { approved: boolean }) => {
-  return vi.fn<typeof fetch>(async (input: RequestInfo) => {
-    if (typeof input === 'string' && input.endsWith('approved-ouis.json')) {
+  return vi.fn(async (input: RequestInfo | URL) => {
+    const inputStr = typeof input === 'string' ? input : input.toString();
+    if (inputStr.endsWith('approved-ouis.json')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ approved_ouis: options.approved ? ['A1B2C3'] : [] }) } as Response);
     }
-    if (typeof input === 'string' && input.endsWith('provision-defaults.json')) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ account: 'acct', isp: 'isp', configfiles: ['cfg0','cfg1','cfg2','cfg3'] }) } as Response);
+    if (inputStr.endsWith('provision-defaults.json')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ account: 'acct', isp: 'isp', configfile: 'cfg0' }) } as Response);
     }
     return Promise.reject(new Error('Unknown fetch'));
   });
@@ -36,7 +37,7 @@ describe('E2E provisioning flows', () => {
     vi.mocked(provisioningApi.addHsd).mockReset();
   });
 
-  it('handles valid OUI with all MACs available', async () => {
+  it('handles valid OUI with MAC available', async () => {
     global.fetch = setupFetch({ approved: true }) as typeof fetch;
     const { provisioningApi } = await import('@/services/provisioningApi');
     vi.mocked(provisioningApi.searchByMac).mockResolvedValue([]);
@@ -46,16 +47,14 @@ describe('E2E provisioning flows', () => {
     render(<ProvisioningPage />);
     await typeAndValidate(user);
 
-    await waitFor(() => expect(screen.getAllByText('Available').length).toBe(4));
+    await waitFor(() => expect(screen.getByText('Available')).toBeInTheDocument());
   });
 
-  it('marks existing MACs correctly', async () => {
+  it('marks existing MAC correctly', async () => {
     global.fetch = setupFetch({ approved: true }) as typeof fetch;
     const { provisioningApi } = await import('@/services/provisioningApi');
     vi.mocked(provisioningApi.searchByMac)
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ account: 'existing', configfile: 'cfg1', isp: 'isp' }])
-      .mockResolvedValue([]);
+      .mockResolvedValueOnce([{ mac: 'A1:B2:C3:00:00:00', account: 'existing', configfile: 'cfg1', isp: 'isp' }]);
     vi.mocked(provisioningApi.addHsd).mockResolvedValue({ success: true });
 
     const user = userEvent.setup();
@@ -69,10 +68,7 @@ describe('E2E provisioning flows', () => {
     global.fetch = setupFetch({ approved: true }) as typeof fetch;
     const { provisioningApi } = await import('@/services/provisioningApi');
     vi.mocked(provisioningApi.searchByMac)
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
-      .mockRejectedValueOnce(new Error('Server error'))
-      .mockResolvedValue([]);
+      .mockRejectedValueOnce(new Error('Server error'));
     vi.mocked(provisioningApi.addHsd).mockResolvedValue({ success: true });
 
     const user = userEvent.setup();

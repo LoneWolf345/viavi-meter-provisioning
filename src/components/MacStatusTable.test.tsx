@@ -1,26 +1,43 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { MacStatusTable, MacStatus } from './MacStatusTable';
+import { MacStatusCard, MacStatus } from './MacStatusCard';
 
-const macs: MacStatus[] = [
-  { mac: 'AA:AA:AA:AA:AA:00', index: 0, configfile: 'cfg0', status: 'pending', provisionState: 'pending' },
-  { mac: 'AA:AA:AA:AA:AA:01', index: 1, configfile: 'cfg1', status: 'checking', provisionState: 'provisioning' },
-  { mac: 'AA:AA:AA:AA:AA:02', index: 2, configfile: 'cfg2', status: 'found', provisionState: 'complete' },
-  { mac: 'AA:AA:AA:AA:AA:03', index: 3, configfile: 'cfg3', status: 'not-found', provisionState: 'error' },
-  { mac: 'AA:AA:AA:AA:AA:04', index: 4, configfile: 'cfg4', status: 'unknown', provisionState: 'pending' },
-];
+describe('MacStatusCard', () => {
+  it('renders status badges correctly', () => {
+    const mac: MacStatus = {
+      mac: 'AA:AA:AA:AA:AA:00',
+      configfile: 'cfg0',
+      status: 'not-found',
+      provisionState: 'pending'
+    };
 
-describe('MacStatusTable', () => {
-  it('renders status and provision badges correctly', () => {
-    render(<MacStatusTable macs={macs} showProvisionColumn />);
-
-    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
-    expect(screen.getByText('Checking...')).toBeInTheDocument();
-    expect(screen.getByText('Exists')).toBeInTheDocument();
+    render(<MacStatusCard mac={mac} />);
     expect(screen.getByText('Available')).toBeInTheDocument();
-    expect(screen.getByText('Unknown')).toBeInTheDocument();
-    expect(screen.getByText('Provisioning...')).toBeInTheDocument();
+    expect(screen.getByText('AA:AA:AA:AA:AA:00')).toBeInTheDocument();
+  });
+
+  it('renders provision state when enabled', () => {
+    const mac: MacStatus = {
+      mac: 'AA:AA:AA:AA:AA:00',
+      configfile: 'cfg0',
+      status: 'not-found',
+      provisionState: 'complete'
+    };
+
+    render(<MacStatusCard mac={mac} showProvisionState />);
     expect(screen.getByText('Complete')).toBeInTheDocument();
-    expect(screen.getByText('Error')).toBeInTheDocument();
+  });
+
+  it('shows error message when present', () => {
+    const mac: MacStatus = {
+      mac: 'AA:AA:AA:AA:AA:00',
+      configfile: 'cfg0',
+      status: 'not-found',
+      provisionState: 'error',
+      error: 'Test error message'
+    };
+
+    render(<MacStatusCard mac={mac} showProvisionState />);
+    expect(screen.getByText('Test error message')).toBeInTheDocument();
   });
 });
