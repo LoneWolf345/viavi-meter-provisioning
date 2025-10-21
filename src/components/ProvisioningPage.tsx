@@ -183,7 +183,7 @@ export function ProvisioningPage() {
             <Network className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">MAC Provisioning Tool</h1>
+            <h1 className="text-2xl font-bold text-foreground">Viavi Provisioning Tool</h1>
             <p className="text-muted-foreground">Validate, check status, and provision Viavi meters.</p>
           </div>
         </div>
