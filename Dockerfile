@@ -1,44 +1,75 @@
 # syntax=docker/dockerfile:1
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Builder stage: compile the Vite app
+# Build stage: build the Vite app
 # ──────────────────────────────────────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/nodejs-20 AS builder
+FROM node:20.11-alpine3.19 AS builder
 
-# Build-time env for Vite (adjust if needed)
-ENV NODE_ENV=production \
-    VITE_API_BASE_URL="https://ldap-api.apps.prod-ocp4.corp.cableone.net/" \
-    VITE_USE_STUB_API="false"
-
+# Create app directory
 WORKDIR /opt/app-root/src
 
-# Install only what's needed to build
+# Install full deps (incl. dev) so Vite is available to build
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-cache
 
-# Build
+# Copy source and build
 COPY . .
 RUN npm run build
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Runtime stage: serve static files with OpenShift-friendly NGINX
+# Production stage: run Vite preview (serves /dist)
 # ──────────────────────────────────────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/nginx-120
+FROM node:20.11-alpine3.19 AS production
 
-# NGINX in this image listens on 8080; keep it explicit for clarity
-ENV PORT=8080
+# Create OpenShift-friendly dirs and npm cache dir
+RUN mkdir -p /opt/app-root/src \
+    /opt/app-root/home \
+    /opt/app-root/home/.npm \
+    /tmp
 
-# Copy built artifacts
-COPY --from=builder /opt/app-root/src/dist/ /usr/share/nginx/html/
+WORKDIR /opt/app-root/src
 
-# Provide SPA routing & basic tuning
-COPY nginx-spa.conf /etc/nginx/conf.d/default.conf
+# Environment for OpenShift + Vite preview
+ENV HOME=/opt/app-root/home \
+    NODE_ENV=production \
+    PORT=8080 \
+    NPM_CONFIG_CACHE=/opt/app-root/home/.npm \
+    NODE_OPTIONS="--max-old-space-size=384"
 
-# Make directories writable by "root" group so arbitrary UID in OpenShift (group 0)
-# can run NGINX and write its cache/run/logs if needed.
-RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx \
-    && chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d \
-    && chmod -R g+rwX /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d
+# Copy package files and install deps (keep dev deps so "vite preview" works)
+COPY package*.json ./
+RUN npm ci --no-cache
+
+# Bring in the built assets
+COPY --from=builder /opt/app-root/src/dist ./dist
+
+# (Optional) Vite config is sometimes referenced at preview time
+COPY vite.config.ts ./
+
+# Install curl for healthcheck
+RUN apk --no-cache add curl
+
+# OpenShift arbitrary UID support: give group-0 write access and set a non-root UID
+# NOTE: This mirrors your example even if it's not the ideal pattern.
+RUN chown -R 1002290000:0 /opt/app-root /tmp \
+ && chmod -R g=u /opt/app-root /tmp
+
+# Switch to unprivileged user
+USER 1002290000
+
+# Labels (customize as needed)
+LABEL io.openshift.expose-services="8080:http" \
+      io.k8s.description="VIAVI Meter Provisioning (Vite React)" \
+      io.openshift.tags="nodejs,vite,react" \
+      io.openshift.non-scalable="false" \
+      io.k8s.display-name="viavi-meter-provisioning"
 
 EXPOSE 8080
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/ || exit 1
+
+# Start the preview server; bind to all interfaces for containers
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "8080"]
