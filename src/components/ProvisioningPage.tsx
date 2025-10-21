@@ -8,13 +8,11 @@ import { MacStatusCard, MacStatus } from './MacStatusCard';
 import { provisioningApi } from '@/services/provisioningApi';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Network, CheckCircle } from 'lucide-react';
-
 interface ProvisionDefaults {
   account: string;
   isp: string;
   configfile: string;
 }
-
 export function ProvisioningPage() {
   const [currentStep, setCurrentStep] = useState<'input' | 'status' | 'provisioning'>('input');
   const [mac, setMac] = useState<MacStatus | null>(null);
@@ -22,8 +20,9 @@ export function ProvisioningPage() {
   const [statusError, setStatusError] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [provisionDefaults, setProvisionDefaults] = useState<ProvisionDefaults | null>(null);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const loadProvisionDefaults = async (): Promise<ProvisionDefaults | null> => {
     try {
       const response = await fetch('/config/provision-defaults.json');
@@ -35,18 +34,17 @@ export function ProvisioningPage() {
       toast({
         title: "Configuration Error",
         description: "Failed to load provisioning configuration",
-        variant: "destructive",
+        variant: "destructive"
       });
       return null;
     }
   };
-
   const handleMacValidated = async (validatedMac: string) => {
     setIsLoading(true);
     setStatusError('');
-    
+
     // Load defaults if not already loaded
-    const defaults = provisionDefaults || await loadProvisionDefaults();
+    const defaults = provisionDefaults || (await loadProvisionDefaults());
     if (!defaults) {
       setIsLoading(false);
       return;
@@ -59,14 +57,12 @@ export function ProvisioningPage() {
       status: 'checking',
       provisionState: 'pending'
     };
-
     setMac(macStatus);
     setCurrentStep('status');
 
     // Check status for the MAC
     try {
       const searchResult = await provisioningApi.searchByMac(validatedMac);
-      
       if (searchResult.length > 0) {
         setMac({
           ...macStatus,
@@ -87,10 +83,8 @@ export function ProvisioningPage() {
       });
       setStatusError('Status check unavailable; you can still proceed with provisioning.');
     }
-
     setIsLoading(false);
   };
-
   const handleProvisionClick = () => {
     if (mac?.status === 'found') {
       setShowConfirmDialog(true);
@@ -98,14 +92,11 @@ export function ProvisioningPage() {
       startProvisioning();
     }
   };
-
   const startProvisioning = async () => {
     setShowConfirmDialog(false);
     setCurrentStep('provisioning');
-
     if (!mac) return;
-
-    const defaults = provisionDefaults ?? await loadProvisionDefaults();
+    const defaults = provisionDefaults ?? (await loadProvisionDefaults());
     if (!defaults) return;
 
     // Update to provisioning state
@@ -113,7 +104,6 @@ export function ProvisioningPage() {
       ...mac,
       provisionState: 'provisioning'
     });
-
     try {
       const request = {
         mac: mac.mac,
@@ -121,9 +111,7 @@ export function ProvisioningPage() {
         configfile: mac.configfile,
         isp: defaults.isp
       };
-
       const result = await provisioningApi.addHsd(request);
-
       if (result.success) {
         setMac({
           ...mac,
@@ -131,7 +119,7 @@ export function ProvisioningPage() {
         });
         toast({
           title: "Provisioning Complete",
-          description: "MAC address provisioned successfully",
+          description: "MAC address provisioned successfully"
         });
       } else {
         setMac({
@@ -142,7 +130,7 @@ export function ProvisioningPage() {
         toast({
           title: "Provisioning Failed",
           description: result.detail || result.error || 'Unknown error',
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -154,58 +142,40 @@ export function ProvisioningPage() {
       toast({
         title: "Provisioning Error",
         description: (error as Error).message,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleReset = () => {
     setCurrentStep('input');
     setMac(null);
     setStatusError('');
     setShowConfirmDialog(false);
   };
-
   const getStepIndicator = () => {
-    const steps = [
-      { key: 'input', label: 'Validate MAC' },
-      { key: 'status', label: 'Check Status' },
-      { key: 'provisioning', label: 'Provision' }
-    ];
-
-    return (
-      <div className="flex items-center gap-2 mb-6">
-        {steps.map((step, index) => (
-          <div key={step.key} className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep === step.key 
-                ? 'bg-primary text-primary-foreground'
-                : steps.findIndex(s => s.key === currentStep) > index
-                ? 'bg-success text-success-foreground'
-                : 'bg-muted text-muted-foreground'
-            }`}>
-              {steps.findIndex(s => s.key === currentStep) > index ? (
-                <CheckCircle className="h-4 w-4" />
-              ) : (
-                index + 1
-              )}
+    const steps = [{
+      key: 'input',
+      label: 'Validate MAC'
+    }, {
+      key: 'status',
+      label: 'Check Status'
+    }, {
+      key: 'provisioning',
+      label: 'Provision'
+    }];
+    return <div className="flex items-center gap-2 mb-6">
+        {steps.map((step, index) => <div key={step.key} className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep === step.key ? 'bg-primary text-primary-foreground' : steps.findIndex(s => s.key === currentStep) > index ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}`}>
+              {steps.findIndex(s => s.key === currentStep) > index ? <CheckCircle className="h-4 w-4" /> : index + 1}
             </div>
-            <span className={`text-sm ${
-              currentStep === step.key ? 'font-medium' : 'text-muted-foreground'
-            }`}>
+            <span className={`text-sm ${currentStep === step.key ? 'font-medium' : 'text-muted-foreground'}`}>
               {step.label}
             </span>
-            {index < steps.length - 1 && (
-              <div className="w-8 h-px bg-border mx-2" />
-            )}
-          </div>
-        ))}
-      </div>
-    );
+            {index < steps.length - 1 && <div className="w-8 h-px bg-border mx-2" />}
+          </div>)}
+      </div>;
   };
-
-  return (
-    <div className="min-h-screen bg-background p-6">
+  return <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
@@ -213,8 +183,8 @@ export function ProvisioningPage() {
             <Network className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Viavi Provisioning Tool</h1>
-            <p className="text-muted-foreground">Validate, check status, and provision MAC address</p>
+            <h1 className="text-2xl font-bold text-foreground">MAC Provisioning Tool</h1>
+            <p className="text-muted-foreground">Validate, check status, and provision Viavi meters.</p>
           </div>
         </div>
 
@@ -222,18 +192,15 @@ export function ProvisioningPage() {
         {getStepIndicator()}
 
         {/* Status Error Banner */}
-        {statusError && (
-          <Alert className="border-warning bg-warning/10">
+        {statusError && <Alert className="border-warning bg-warning/10">
             <AlertTriangle className="h-4 w-4 text-warning" />
             <AlertDescription className="text-warning-foreground">
               {statusError}
             </AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
 
         {/* Main Content */}
-        {currentStep === 'input' && (
-          <Card>
+        {currentStep === 'input' && <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full" />
@@ -243,11 +210,9 @@ export function ProvisioningPage() {
             <CardContent>
               <MacValidator onValidated={handleMacValidated} isLoading={isLoading} />
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
-        {currentStep !== 'input' && mac && (
-          <div className="space-y-6">
+        {currentStep !== 'input' && mac && <div className="space-y-6">
             {/* MAC Overview */}
             <div className="flex items-center justify-between">
               <div>
@@ -257,33 +222,25 @@ export function ProvisioningPage() {
                 <Button variant="outline" onClick={handleReset}>
                   Start Over
                 </Button>
-                {currentStep === 'status' && !isLoading && (
-                  <Button onClick={handleProvisionClick} className="gap-2">
+                {currentStep === 'status' && !isLoading && <Button onClick={handleProvisionClick} className="gap-2">
                     <Network className="h-4 w-4" />
                     Provision MAC
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
 
             {/* Status Card */}
-            <MacStatusCard 
-              mac={mac}
-              showProvisionState={currentStep === 'provisioning'}
-            />
+            <MacStatusCard mac={mac} showProvisionState={currentStep === 'provisioning'} />
 
             {/* Existing MAC Warning */}
-            {mac.status === 'found' && currentStep === 'status' && (
-              <Alert className="border-warning bg-warning/10">
+            {mac.status === 'found' && currentStep === 'status' && <Alert className="border-warning bg-warning/10">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-warning-foreground">
                   <strong>Warning:</strong> This MAC already exists in the system.
                   Provisioning will reapply the configuration.
                 </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        )}
+              </Alert>}
+          </div>}
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -309,6 +266,5 @@ export function ProvisioningPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
-  );
+    </div>;
 }
