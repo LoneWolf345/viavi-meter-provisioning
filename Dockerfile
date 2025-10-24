@@ -18,58 +18,33 @@ RUN npm run build
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Production stage: run Vite preview (serves /dist)
+# Runtime stage: serve static files with OpenShift-friendly NGINX
 # ──────────────────────────────────────────────────────────────────────────────
-FROM node:20.11-alpine3.19 AS production
+FROM registry.access.redhat.com/ubi9/nginx-120
 
-# Create OpenShift-friendly dirs and npm cache dir
-RUN mkdir -p /opt/app-root/src \
-    /opt/app-root/home \
-    /opt/app-root/home/.npm \
-    /tmp
+# NGINX in this image listens on 8080 by default
+ENV PORT=8080
 
-WORKDIR /opt/app-root/src
+# Copy built artifacts from builder stage
+COPY --from=builder /opt/app-root/src/dist/ /usr/share/nginx/html/
 
-# Environment for OpenShift + Vite preview
-ENV HOME=/opt/app-root/home \
-    NODE_ENV=production \
-    PORT=8080 \
-    NPM_CONFIG_CACHE=/opt/app-root/home/.npm \
-    NODE_OPTIONS="--max-old-space-size=384"
+# Provide SPA routing & config file handling
+COPY nginx-spa.conf /etc/nginx/conf.d/default.conf
 
-# Copy package files and install deps (keep dev deps so "vite preview" works)
-COPY package*.json ./
-RUN npm ci --no-cache
-
-# Bring in the built assets
-COPY --from=builder /opt/app-root/src/dist ./dist
-
-# (Optional) Vite config is sometimes referenced at preview time
-COPY vite.config.ts ./
-
-# Install curl for healthcheck
-RUN apk --no-cache add curl
-
-# OpenShift arbitrary UID support: give group-0 write access and set a non-root UID
-# NOTE: This mirrors your example even if it's not the ideal pattern.
-RUN chown -R 1001580000:0 /opt/app-root /tmp \
- && chmod -R g=u /opt/app-root /tmp
-
-# Switch to unprivileged user
-USER 1001580000
+# Make directories writable by group-0 so arbitrary UID in OpenShift can run NGINX
+# OpenShift runs containers with a random UID but always in group 0
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx \
+    && chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d \
+    && chmod -R g+rwX /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d
 
 # Labels (customize as needed)
 LABEL io.openshift.expose-services="8080:http" \
-      io.k8s.description="VIAVI Meter Provisioning (Vite React)" \
-      io.openshift.tags="nodejs,vite,react" \
+      io.k8s.description="VIAVI Meter Provisioning (NGINX Static)" \
+      io.openshift.tags="nginx,react,spa" \
       io.openshift.non-scalable="false" \
       io.k8s.display-name="viavi-meter-provisioning"
 
 EXPOSE 8080
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080/ || exit 1
-
-# Start the preview server; bind to all interfaces for containers
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "8080"]
+# The UBI9 NGINX image has a built-in CMD that starts nginx in foreground mode
+# No explicit CMD needed - it will run: nginx -g "daemon off;"
