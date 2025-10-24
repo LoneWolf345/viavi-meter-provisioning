@@ -33,8 +33,7 @@ COPY nginx-spa.conf /etc/nginx/conf.d/default.conf
 
 # Make directories writable by group-0 so arbitrary UID in OpenShift can run NGINX
 # OpenShift runs containers with a random UID but always in group 0
-RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx \
-    && chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d \
+RUN chgrp -R 0 /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d \
     && chmod -R g+rwX /var/cache/nginx /var/run /var/log/nginx /usr/share/nginx/html /etc/nginx/conf.d
 
 # Labels (customize as needed)
