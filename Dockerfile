@@ -52,11 +52,11 @@ RUN apk --no-cache add curl
 
 # OpenShift arbitrary UID support: give group-0 write access and set a non-root UID
 # NOTE: This mirrors your example even if it's not the ideal pattern.
-RUN chown -R 1002290000:0 /opt/app-root /tmp \
+RUN chown -R 1001580000:0 /opt/app-root /tmp \
  && chmod -R g=u /opt/app-root /tmp
 
 # Switch to unprivileged user
-USER 1002290000
+USER 1001580000
 
 # Labels (customize as needed)
 LABEL io.openshift.expose-services="8080:http" \
