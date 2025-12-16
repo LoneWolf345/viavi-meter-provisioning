@@ -19,11 +19,10 @@ spec:
       serviceAccountName: viavi-meter-provisioning
       securityContext:
         fsGroup: 0
-        supplementalGroups: [1002290000]
         seLinuxOptions:
           level: s0:c48,c17
         runAsNonRoot: true
-        runAsUser: 1002290000
+        # Let OpenShift assign UID from namespace range (do not hardcode runAsUser)
       containers:
         - name: viavi-meter-provisioning
           image: image-registry.openshift-image-registry.svc:5000/viavi-meter-provisioning/viavi-meter-provisioning:latest
@@ -97,7 +96,7 @@ spec:
               drop:
                 - ALL
             runAsNonRoot: true
-            runAsUser: 1002290000
+            # Let OpenShift assign UID from namespace range
       volumes:
         - name: tmp-volume
           emptyDir: {}
