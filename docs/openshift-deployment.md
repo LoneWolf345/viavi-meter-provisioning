@@ -2,6 +2,8 @@
 
 This guide describes how to deploy the VIAVI Meter Provisioning application to an OpenShift cluster and configure the Tekton pipeline.
 
+> **📋 For a complete checklist of manual settings and environment-specific values, see [OpenShift Manual Settings](./openshift-manual-settings.md).**
+
 ## Apply Application Manifests
 
 Ensure you are logged in to the target cluster with the `oc` CLI and then apply the application manifests:
