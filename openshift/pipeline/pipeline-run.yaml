@@ -2,6 +2,7 @@ apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: build-and-deploy-run
+  namespace: viavi-meter-provisioning
 spec:
   serviceAccountName: pipeline
   pipelineRef:
