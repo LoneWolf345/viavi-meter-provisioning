@@ -49,11 +49,16 @@ class ProvisioningApiService {
    */
   async searchByMac(mac: string): Promise<MacSearchResult[]> {
     if (this.config.enableStubMode) {
+      console.log('[API] Stub mode enabled, using mock data');
       return this.stubSearchByMac(mac);
     }
 
+    const url = `${this.config.baseUrl}/searchbymac/${mac}`;
+    console.log('[API] Fetching:', url);
+
     try {
-      const response = await fetch(`${this.config.baseUrl}/searchbymac/${mac}`);
+      const response = await fetch(url);
+      console.log('[API] Response status:', response.status);
       
       if (!response.ok) {
         if (response.status >= 500) {
@@ -62,9 +67,16 @@ class ProvisioningApiService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('[API] Response data:', data);
+      return data;
     } catch (error) {
-      console.error('Search API error:', error);
+      console.error('[API] Search error:', error);
+      console.error('[API] Error details:', {
+        message: (error as Error).message,
+        name: (error as Error).name,
+        url
+      });
       throw error;
     }
   }

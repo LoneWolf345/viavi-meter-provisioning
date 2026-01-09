@@ -5,7 +5,5 @@ metadata:
   labels:
     app: viavi-meter-provisioning
 data:
-  # Update these values for your environment
-  VITE_API_BASE_URL: "https://your-api-url.example.com"
+  VITE_API_BASE_URL: "https://ldap-api.apps.prod-ocp4.corp.cableone.net"
   VITE_USE_STUB_API: "false"
-  VITE_SUPABASE_URL: "https://your-supabase-project.supabase.co"
