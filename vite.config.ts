@@ -11,6 +11,9 @@ export default defineConfig(async ({ mode }) => ({
   preview: {
     host: "0.0.0.0",
     port: 8080,
+    allowedHosts: [
+      "viavi-meter-provisioning.apps.prod-ocp4.corp.cableone.net",
+    ],
   },
   plugins: [
     react(),
