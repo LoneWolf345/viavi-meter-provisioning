@@ -6,6 +6,8 @@
  * details.
  */
 
+import { serverLogger } from '@/utils/serverLogger';
+
 export interface MacSearchResult {
   mac: string;
   account: string;
@@ -49,16 +51,22 @@ class ProvisioningApiService {
    */
   async searchByMac(mac: string): Promise<MacSearchResult[]> {
     if (this.config.enableStubMode) {
-      console.log('[API] Stub mode enabled, using mock data');
+      serverLogger.info('[API] Stub mode enabled, using mock data');
       return this.stubSearchByMac(mac);
     }
 
-    const url = `${this.config.baseUrl}/searchbymac/${mac}`;
-    console.log('[API] Fetching:', url);
+    // URL-encode the MAC address to handle colons properly
+    const encodedMac = encodeURIComponent(mac);
+    const url = `${this.config.baseUrl}/searchbymac/${encodedMac}`;
+    serverLogger.info('[API] Fetching', { url, mac, encodedMac });
 
     try {
       const response = await fetch(url);
-      console.log('[API] Response status:', response.status);
+      serverLogger.info('[API] Response received', { 
+        status: response.status, 
+        ok: response.ok,
+        statusText: response.statusText
+      });
       
       if (!response.ok) {
         if (response.status >= 500) {
@@ -68,11 +76,10 @@ class ProvisioningApiService {
       }
 
       const data = await response.json();
-      console.log('[API] Response data:', data);
+      serverLogger.info('[API] Response data', { data });
       return data;
     } catch (error) {
-      console.error('[API] Search error:', error);
-      console.error('[API] Error details:', {
+      serverLogger.error('[API] Search error', {
         message: (error as Error).message,
         name: (error as Error).name,
         url
@@ -126,7 +133,7 @@ class ProvisioningApiService {
         detail: `HTTP ${response.status}: ${response.statusText}`
       };
     } catch (error) {
-      console.error('Provision API error:', error);
+      serverLogger.error('[API] Provision error', { error: (error as Error).message });
       return {
         success: false,
         error: 'Network Error',
