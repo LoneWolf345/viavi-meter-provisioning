@@ -7,6 +7,7 @@
  */
 
 import { serverLogger } from '@/utils/serverLogger';
+import { classifyError, ClassifiedError, createErrorFromResponse, ErrorContext } from '@/utils/errorUtils';
 
 export interface MacSearchResult {
   mac: string;
@@ -25,7 +26,8 @@ export interface ProvisionRequest {
 
 export interface ProvisionResponse {
   success: boolean;
-  error?: string;
+  error?: ClassifiedError;
+  /** @deprecated Use error.technicalDetail instead */
   detail?: string;
 }
 
@@ -33,13 +35,15 @@ export interface ApiConfig {
   baseUrl: string;
   enableStubMode: boolean;
   stubDelay: number;
+  timeout: number;
 }
 
 class ProvisioningApiService {
   private config: ApiConfig = {
     baseUrl: '',
     enableStubMode: true, // Default to stub mode for development
-    stubDelay: 1500
+    stubDelay: 1500,
+    timeout: 30000, // 30 second timeout
   };
 
   configure(config: Partial<ApiConfig>) {
@@ -58,33 +62,57 @@ class ProvisioningApiService {
     // URL-encode the MAC address to handle colons properly
     const encodedMac = encodeURIComponent(mac);
     const url = `${this.config.baseUrl}/searchbymac/${encodedMac}`;
+    const context: ErrorContext = { type: 'search', url };
+
     serverLogger.info('[API] Fetching', { url, mac, encodedMac });
 
     try {
-      const response = await fetch(url);
-      serverLogger.info('[API] Response received', { 
-        status: response.status, 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      serverLogger.info('[API] Response received', {
+        status: response.status,
         ok: response.ok,
-        statusText: response.statusText
+        statusText: response.statusText,
       });
-      
+
       if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const classifiedError = await createErrorFromResponse(response, context);
+        serverLogger.error('[API] Search error response', {
+          status: response.status,
+          classifiedError,
+        });
+        throw Object.assign(new Error(classifiedError.message), { classifiedError });
       }
 
       const data = await response.json();
       serverLogger.info('[API] Response data', { data });
       return data;
     } catch (error) {
+      // Handle abort as timeout
+      if ((error as Error).name === 'AbortError') {
+        const timeoutError = classifyError(new Error('Request timed out'), context);
+        serverLogger.error('[API] Search timeout', { url, timeout: this.config.timeout });
+        throw Object.assign(new Error(timeoutError.message), { classifiedError: timeoutError });
+      }
+
+      // If already classified, re-throw
+      if ((error as { classifiedError?: ClassifiedError }).classifiedError) {
+        throw error;
+      }
+
+      // Classify unknown errors
+      const classifiedError = classifyError(error as Error, context);
       serverLogger.error('[API] Search error', {
         message: (error as Error).message,
         name: (error as Error).name,
-        url
+        url,
+        classifiedError,
       });
-      throw error;
+      throw Object.assign(new Error(classifiedError.message), { classifiedError });
     }
   }
 
@@ -96,48 +124,54 @@ class ProvisioningApiService {
       return this.stubAddHsd(request);
     }
 
+    const url = `${this.config.baseUrl}/addhsd`;
+    const context: ErrorContext = { type: 'provision', url };
+
     try {
-      const response = await fetch(`${this.config.baseUrl}/addhsd`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const result = await response.json();
         return { success: result === true };
       }
 
-      if (response.status === 400) {
-        const errorData = await response.json().catch(() => ({}));
-        return {
-          success: false,
-          error: 'Validation Error',
-          detail: errorData.detail || 'Bad request'
-        };
-      }
-
-      if (response.status >= 500) {
-        return {
-          success: false,
-          error: 'Server Error',
-          detail: `HTTP ${response.status}: Server error`
-        };
-      }
-
+      const classifiedError = await createErrorFromResponse(response, context);
       return {
         success: false,
-        error: 'Unknown Error',
-        detail: `HTTP ${response.status}: ${response.statusText}`
+        error: classifiedError,
+        detail: classifiedError.technicalDetail,
       };
     } catch (error) {
-      serverLogger.error('[API] Provision error', { error: (error as Error).message });
+      // Handle abort as timeout
+      if ((error as Error).name === 'AbortError') {
+        const timeoutError = classifyError(new Error('Request timed out'), context);
+        return {
+          success: false,
+          error: timeoutError,
+          detail: timeoutError.technicalDetail,
+        };
+      }
+
+      const classifiedError = classifyError(error as Error, context);
+      serverLogger.error('[API] Provision error', {
+        error: (error as Error).message,
+        classifiedError,
+      });
       return {
         success: false,
-        error: 'Network Error',
-        detail: (error as Error).message
+        error: classifiedError,
+        detail: classifiedError.technicalDetail,
       };
     }
   }
@@ -153,18 +187,21 @@ class ProvisioningApiService {
     const shouldExist = macNumber % 3 === 0; // Every 3rd MAC "exists"
     const shouldError = macNumber % 7 === 0; // Every 7th MAC causes server error
 
-    if (shouldError && macNumber % 21 !== 0) { // But not if both conditions are true
+    if (shouldError && macNumber % 21 !== 0) {
+      // But not if both conditions are true
       throw new Error('Simulated server error (5xx)');
     }
 
     if (shouldExist) {
-      return [{
-        mac,
-        account: 'ViaviMeter',
-        configfile: 'existing-config',
-        isp: 'CableOne',
-        customFields: null
-      }];
+      return [
+        {
+          mac,
+          account: 'ViaviMeter',
+          configfile: 'existing-config',
+          isp: 'CableOne',
+          customFields: null,
+        },
+      ];
     }
 
     return []; // Not found
@@ -184,16 +221,18 @@ class ProvisioningApiService {
     if (shouldError500) {
       return {
         success: false,
-        error: 'Server Error',
-        detail: 'Simulated internal server error'
+        error: classifyError(new Error('Server error: 500'), { type: 'provision' }),
+        detail: 'Simulated internal server error',
       };
     }
 
     if (shouldError400) {
       return {
         success: false,
-        error: 'Validation Error',
-        detail: 'MAC address already exists with different configuration'
+        error: classifyError(new Error('Validation failed: MAC already exists'), {
+          type: 'provision',
+        }),
+        detail: 'MAC address already exists with different configuration',
       };
     }
 
@@ -201,7 +240,7 @@ class ProvisioningApiService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
