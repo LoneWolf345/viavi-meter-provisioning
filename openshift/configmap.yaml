@@ -5,5 +5,10 @@ metadata:
   labels:
     app: viavi-meter-provisioning
 data:
+  # Frontend config (used at build time)
   VITE_API_BASE_URL: "https://ldap-api.apps.prod-ocp4.corp.cableone.net"
   VITE_USE_STUB_API: "false"
+  # Backend proxy URL (used at runtime by Vite preview server)
+  # Use internal cluster service URL if ldap-api is on same cluster:
+  # LDAP_API_URL: "http://ldap-api.your-namespace.svc.cluster.local:8080"
+  LDAP_API_URL: "https://ldap-api.apps.prod-ocp4.corp.cableone.net"

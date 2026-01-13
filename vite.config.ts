@@ -3,8 +3,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { IncomingMessage, ServerResponse } from "http";
 
-// LDAP API backend URL for CORS proxy
-const LDAP_API_URL = 'https://ldap-api.apps.prod-ocp4.corp.cableone.net';
+// LDAP API backend URL for CORS proxy - configurable via env var for OpenShift
+const LDAP_API_URL = process.env.LDAP_API_URL || 'https://ldap-api.apps.prod-ocp4.corp.cableone.net';
 
 // Plugin to expose frontend logs and proxy API requests to avoid CORS
 function serverLoggerPlugin(): Plugin {
