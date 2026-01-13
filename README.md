@@ -1,111 +1,131 @@
 # VIAVI Meter Provisioning
 
-## Project Overview
-This web application validates a MAC address and provisions it through a provisioning API. It is built with Vite, React, and TypeScript with a component-driven architecture using shadcn-ui and Tailwind CSS.
+A web application for field technicians to validate and provision VIAVI network meters. Technicians enter a MAC address, the app verifies it belongs to a known VIAVI device, checks its current status in the provisioning system, and registers it for network access.
 
-### Architecture
-- **Vite + React + TypeScript** for the core application stack.
-- **React Router** manages routing between pages in `src/pages`.
-- **@tanstack/react-query** handles server state and caching.
-- **shadcn-ui / Radix UI** and **Tailwind CSS** provide the UI foundation.
-- **Supabase** supplies backend services through a generated client and types.
+## What It Does
 
-## Getting Started
-1. Install dependencies:
-   ```sh
-   npm install
-   ```
-2. Start the development server:
-   ```sh
-   npm run dev
-   ```
-3. Create a production build:
-   ```sh
-   npm run build
-   ```
-4. Run tests:
-   ```sh
-   npm run test            # Vitest in watch mode
-   npm run test -- --run   # Single run for CI
-   ```
-5. Lint the codebase:
-   ```sh
-   npm run lint
-   ```
+1. **MAC Validation** — Accepts a MAC address and verifies the OUI (first 6 hex digits) matches an approved VIAVI manufacturer prefix.
+2. **Status Check** — Queries the LDAP API to determine if the device is already provisioned.
+3. **Provisioning** — Registers new devices with the backend, assigning account, ISP, and config-file parameters.
 
-## Directory Structure
-- `src/components` – Reusable React components and UI primitives.
-- `src/pages` – Top-level route components used by React Router.
-- `src/services` – API clients such as the provisioning API wrapper.
-- `src/hooks` – Custom React hooks.
-- `src/integrations` – Third-party integrations like Supabase (`client.ts`, `types.ts`).
-- `src/utils` – Shared utility functions.
-- `src/e2e` – High-level end-to-end tests executed with Vitest.
-- `src/test` – Testing utilities and setup.
+## Architecture
 
-## Testing
-### Vitest
-All unit, integration, and e2e tests run with [Vitest](https://vitest.dev/).
-```sh
-npm run test            # watch mode
-npm run test -- --run   # single run for CI
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Vite as Vite Preview Server
+    participant Proxy as Proxy Middleware<br/>(vite.config.ts)
+    participant LDAP as LDAP API Backend<br/>(ldapapi service)
+
+    Note over Browser,LDAP: MAC Search Flow
+    Browser->>Vite: GET /api/ldap/searchbymac/00:07:11:22:9E:16
+    Vite->>Proxy: Route matches /api/ldap/*
+    Proxy->>Proxy: Build target URL:<br/>LDAP_API_URL + /searchbymac/...
+    Proxy->>LDAP: GET http://ldapapi.ldap-api.svc.cluster.local:8080/searchbymac/...
+    LDAP-->>Proxy: 200 OK + JSON response
+    Proxy-->>Proxy: Add CORS header<br/>(Access-Control-Allow-Origin: *)
+    Proxy-->>Vite: Forward response
+    Vite-->>Browser: JSON result
+
+    Note over Browser,LDAP: Provisioning Flow
+    Browser->>Vite: POST /api/ldap/addhsd
+    Vite->>Proxy: Route matches /api/ldap/*
+    Proxy->>Proxy: Collect request body
+    Proxy->>LDAP: POST http://ldapapi.../addhsd<br/>{mac, account, isp, configfile}
+    LDAP-->>Proxy: 200 OK + provision result
+    Proxy-->>Browser: JSON result
+
+    Note over Browser,LDAP: Error Scenario (502)
+    Browser->>Vite: GET /api/ldap/searchbymac/...
+    Vite->>Proxy: Route matches /api/ldap/*
+    Proxy->>LDAP: fetch() to backend
+    LDAP--xProxy: Connection refused / timeout
+    Proxy-->>Browser: 502 {error: "Proxy error", message: "fetch failed"}
 ```
 
-### End-to-End
-End-to-end flow tests live in `src/e2e` and run with the same Vitest command—no additional runner is required.
+### Key Components
 
-## Supabase Types and Client
-Database types and a typed Supabase client are generated with the [Supabase CLI](https://supabase.com/docs/guides/api/generating-types). The project ID is stored in `supabase/config.toml`.
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Frontend | Vite + React + TypeScript | Single-page UI with step-by-step workflow |
+| UI Kit | shadcn/ui + Tailwind CSS | Consistent, accessible components |
+| State | @tanstack/react-query | Server-state caching and mutations |
+| Proxy | Vite preview middleware | CORS bypass for LDAP API calls |
+| Backend | LDAP API (external) | MAC search and provisioning endpoints |
+
+### API Proxy
+
+The app runs in **Vite preview mode** in production. A custom middleware in `vite.config.ts` proxies `/api/ldap/*` requests to the backend, adding CORS headers so the browser accepts cross-origin responses.
+
+| Environment Variable | Purpose |
+|---------------------|---------|
+| `LDAP_API_URL` | Backend URL (defaults to external; set to internal service URL in OpenShift) |
+
+---
+
+## Getting Started
+
 ```sh
-npm install -g supabase
-supabase login
-supabase link --project-ref <project_id>
+npm install          # Install dependencies
+npm run dev          # Start development server (port 8080)
+npm run build        # Production build
+npm run preview      # Preview production build locally
+```
 
-# Generate updated database types and client
-supabase gen types typescript --linked > src/integrations/supabase/types.ts
-supabase gen typescript --linked --output src/integrations/supabase/client.ts
+## Testing
+
+```sh
+npm run test              # Vitest watch mode
+npm run test -- --run     # Single run (CI)
+npm run test src/e2e      # E2E tests only
+npm run lint              # ESLint
+```
+
+## Directory Structure
+
+```
+src/
+├── components/       # UI components (MacValidator, ProvisioningPage, etc.)
+├── pages/            # Route components (Index, NotFound)
+├── services/         # API clients (provisioningApi)
+├── utils/            # Helpers (macUtils, errorUtils)
+├── hooks/            # Custom React hooks
+├── e2e/              # End-to-end tests
+└── test/             # Test setup
+
+public/config/
+├── approved-ouis.json      # Allowed VIAVI OUI prefixes
+└── provision-defaults.json # Default account/ISP/config values
+
+openshift/            # Deployment manifests
 ```
 
 ## Environment Variables
-- `VITE_API_BASE_URL` – Base URL for the provisioning API. Defaults to `https://ldap-api.apps.prod-ocp4.corp.cableone.net/`.
-- `VITE_USE_STUB_API` – When set to `true`, the app uses a stubbed API for development. Production builds use `.env.production` which sets this to `false`.
 
-The default development values are defined in `.env` while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Base URL for provisioning API | `https://ldap-api.apps.prod-ocp4.corp.cableone.net/` |
+| `VITE_USE_STUB_API` | Use stubbed responses (dev only) | `true` in dev, `false` in prod |
+| `LDAP_API_URL` | Backend URL for proxy (runtime) | External URL; override in OpenShift ConfigMap |
 
-## Testing
+---
 
-### Unit tests
+## Deployment
 
-Run the unit test suite with Vitest:
+### Lovable (quick)
 
-```sh
-npm run test
-```
+Open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) → Share → Publish.
 
-### End-to-end tests
+### OpenShift (production)
 
-Integration style end-to-end tests live under `src/e2e`.
-Execute them separately by passing the directory to Vitest:
+See the [OpenShift deployment guide](docs/openshift-deployment.md) for:
+- Tekton pipeline setup
+- ConfigMap and Secret configuration
+- Route and NetworkPolicy manifests
+- Environment variable injection
 
-```sh
-npm run test src/e2e
-```
+---
 
-### Coverage plan
+## Custom Domain
 
-- Stub API service paths are covered by unit tests.
-- Future work: expand e2e tests to include failure scenarios such as invalid OUIs and server errors.
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/356018a8-3148-4068-995a-374260576ddf) and click on Share -> Publish.
-
-For cluster deployment on OpenShift, including commands for applying manifests, required environment variables and secrets, configuring the Route, and triggering the Tekton pipeline via webhook, see the [OpenShift deployment guide](docs/openshift-deployment.md).
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Development defaults live in `.env`, while `.env.production` ensures `VITE_USE_STUB_API=false` for production builds.
+Navigate to **Project → Settings → Domains** in Lovable to connect a custom domain.
