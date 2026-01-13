@@ -51,6 +51,16 @@ class ProvisioningApiService {
   }
 
   /**
+   * Get the effective base URL - uses /api/ldap proxy in production to avoid CORS
+   */
+  private getEffectiveBaseUrl(): string {
+    if (import.meta.env.PROD) {
+      return '/api/ldap';
+    }
+    return this.config.baseUrl;
+  }
+
+  /**
    * Search for MAC address status
    */
   async searchByMac(mac: string): Promise<MacSearchResult[]> {
@@ -61,7 +71,8 @@ class ProvisioningApiService {
 
     // URL-encode the MAC address to handle colons properly
     const encodedMac = encodeURIComponent(mac);
-    const url = `${this.config.baseUrl}/searchbymac/${encodedMac}`;
+    const baseUrl = this.getEffectiveBaseUrl();
+    const url = `${baseUrl}/searchbymac/${encodedMac}`;
     const context: ErrorContext = { type: 'search', url };
 
     serverLogger.info('[API] Fetching', { url, mac, encodedMac });
@@ -124,7 +135,8 @@ class ProvisioningApiService {
       return this.stubAddHsd(request);
     }
 
-    const url = `${this.config.baseUrl}/addhsd`;
+    const baseUrl = this.getEffectiveBaseUrl();
+    const url = `${baseUrl}/addhsd`;
     const context: ErrorContext = { type: 'provision', url };
 
     try {
