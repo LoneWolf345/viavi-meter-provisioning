@@ -58,7 +58,7 @@ export function MacValidator({ onValidated, isLoading = false }: MacValidatorPro
 
     const ouiApproved = await checkOui(mac);
     if (!ouiApproved) {
-      setError('OUI not recognized/approved');
+      setError('This is not a known Viavi meter.');
       return;
     }
 
