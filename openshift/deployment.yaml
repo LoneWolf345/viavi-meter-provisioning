@@ -44,6 +44,11 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: VITE_USE_STUB_API
+            - name: LDAP_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: LDAP_API_URL
             - name: VITE_SUPABASE_URL
               valueFrom:
                 configMapKeyRef:
@@ -54,7 +59,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: VITE_SUPABASE_ANON_KEY
-          ports:
             - containerPort: 8080
               name: http
           volumeMounts:
