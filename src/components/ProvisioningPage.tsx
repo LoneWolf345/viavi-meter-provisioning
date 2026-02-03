@@ -17,6 +17,7 @@ import { provisioningApi } from '@/services/provisioningApi';
 import { classifyError, ClassifiedError } from '@/utils/errorUtils';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Network, CheckCircle } from 'lucide-react';
+import viaviLogo from '@/assets/viavi-logo.png';
 
 interface ProvisionDefaults {
   account: string;
@@ -268,9 +269,7 @@ export function ProvisioningPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Network className="h-6 w-6 text-primary" />
-          </div>
+          <img src={viaviLogo} alt="Viavi Logo" className="h-12 w-12 rounded-lg" />
           <div>
             <h1 className="text-2xl font-bold text-foreground">Viavi Provisioning Tool</h1>
             <p className="text-muted-foreground">
