@@ -1,178 +1,258 @@
 
 
-# Universal MAC Address Input Implementation
+# Add Unit Test Cases
 
 ## Summary
 
-Enhance the MAC address input to accept all common formats and provide real-time visual formatting feedback as the user types. The input will auto-format to the canonical uppercase colon-separated format.
+Add comprehensive unit tests to cover the recently updated components (`MacStatusCard`, `ProvisioningPage`) and the `MacValidator` component, which currently lacks dedicated tests.
 
 ---
 
-## Supported Input Formats
+## Current Test Coverage Analysis
 
-| Format | Example | Source |
-|--------|---------|--------|
-| Colon-separated | `AA:BB:CC:DD:EE:FF` | Unix/Linux |
-| Hyphen-separated | `AA-BB-CC-DD-EE-FF` | Windows |
-| Dot-separated (Cisco) | `AABB.CCDD.EEFF` | Cisco IOS |
-| No separator | `AABBCCDDEEFF` | Compact |
-| Space-separated | `AA BB CC DD EE FF` | Human-readable |
-| Lowercase | `aa:bb:cc:dd:ee:ff` | Any |
-| Mixed case | `Aa:Bb:Cc:Dd:Ee:Ff` | Any |
-
-**Output format:** `AA:BB:CC:DD:EE:FF` (uppercase, colon-separated)
-
----
-
-## User Experience Improvements
-
-### Real-Time Formatting
-As the user types, the input will auto-format:
-- `aabbcc` → `AA:BB:CC`
-- `aa-bb-cc-dd` → `AA:BB:CC:DD`
-- `aabb.ccdd.eeff` → `AA:BB:CC:DD:EE:FF`
-
-### Visual Feedback
-- Show formatted preview below input while typing
-- Green checkmark when format is complete and valid
-- Clearer placeholder showing accepted formats
-
-### Simplified Error Messages
-- Remove format-specific errors (handled automatically)
-- Keep only OUI validation message
+| File | Current Status | Notes |
+|------|----------------|-------|
+| `src/utils/macUtils.test.ts` | Good coverage | Covers all utility functions including new `normalizeMac` and `isCompleteMac` |
+| `src/utils/errorUtils.test.ts` | Comprehensive | All error classification scenarios covered |
+| `src/services/provisioningApi.test.ts` | Comprehensive | Stub and real API modes covered |
+| `src/components/ErrorDisplay.test.tsx` | Comprehensive | All modes and interactions covered |
+| `src/components/MacStatusCard.test.tsx` | Minimal | Only 3 basic tests, missing new UI states |
+| `src/components/MacValidator.tsx` | Missing | No dedicated test file |
+| `src/components/ProvisioningPage.tsx` | Minimal | Only 1 test in `ProvisioningPage.test.tsx` |
+| `src/e2e/provisioningFlow.test.tsx` | Good | E2E flow tests for key scenarios |
 
 ---
 
-## Technical Changes
+## New Tests to Add
 
-### File: `src/utils/macUtils.ts`
+### 1. MacStatusCard Tests (expand existing file)
 
-**Enhanced `normalizeMac` function:**
+**File:** `src/components/MacStatusCard.test.tsx`
+
+New test cases for recent UI improvements:
 
 ```typescript
-/**
- * Normalizes MAC input to uppercase colon-separated format
- * Supports: colons, hyphens, dots (Cisco), spaces, no separator
- * Handles progressive formatting during typing
- */
-export function normalizeMac(input: string): string {
-  // Strip all non-hex characters and uppercase
-  const cleaned = input.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
-  
-  // Insert colons every 2 characters for what we have
-  const pairs = cleaned.match(/.{1,2}/g) || [];
-  return pairs.join(':');
-}
+// Status badge variations
+it('shows "Checking..." badge when status is checking')
+it('shows "Exists" badge when status is found')
+it('shows "Unknown" badge when status is unknown')
+it('shows "Pending" badge when status is pending')
 
-/**
- * Checks if the normalized MAC has complete 12 hex digits
- */
-export function isCompleteMac(mac: string): boolean {
-  const hexOnly = mac.replace(/:/g, '');
-  return hexOnly.length === 12;
-}
+// Provisioning complete state - NEW UI behavior
+it('shows "Replaced" badge when provisioning complete with previous data')
+it('shows "Previous Status" label when provisioning is complete')
+it('shows "Current Status" label when provisioning is not complete')
+it('shows "Applied Config" with success badge when provisioning complete')
+it('shows "Config to Apply" with code style when provisioning not complete')
+
+// Provision state badges
+it('shows "Provisioning..." badge during provisioning')
+it('shows "Error" badge on provision error')
+
+// Layout structure
+it('displays MAC address in the grid layout')
+it('displays current data account and configfile when present')
 ```
 
-**Add test cases:**
+---
+
+### 2. MacValidator Tests (new file)
+
+**File:** `src/components/MacValidator.test.tsx`
+
+Test cases for the universal MAC input:
+
 ```typescript
-// New test cases
-expect(normalizeMac('aabbccddeeff')).toBe('AA:BB:CC:DD:EE:FF');
-expect(normalizeMac('AA-BB-CC-DD-EE-FF')).toBe('AA:BB:CC:DD:EE:FF');
-expect(normalizeMac('AABB.CCDD.EEFF')).toBe('AA:BB:CC:DD:EE:FF');
-expect(normalizeMac('AA BB CC DD EE FF')).toBe('AA:BB:CC:DD:EE:FF');
-expect(normalizeMac('aaBB')).toBe('AA:BB'); // Partial input
-expect(normalizeMac('aabbcc')).toBe('AA:BB:CC'); // Partial input
+describe('MacValidator', () => {
+  // Input normalization (uses shared macUtils)
+  it('normalizes input as user types')
+  it('accepts compact format and normalizes to colon-separated')
+  it('accepts hyphen-separated format')
+  it('accepts Cisco dot format')
+  it('uppercases lowercase input')
+
+  // Validation flow
+  it('shows error for incomplete MAC address')
+  it('shows error for non-approved OUI')
+  it('calls onValidated with normalized MAC on success')
+  it('shows success message after validation')
+
+  // Helper text
+  it('displays format helper text')
+  it('shows "Press Validate to continue" hint when MAC is complete')
+
+  // Button state
+  it('disables validate button when input is empty')
+  it('disables validate button when isLoading is true')
+
+  // OUI check
+  it('fetches approved OUIs from config')
+  it('handles OUI config fetch failure gracefully')
+})
 ```
 
 ---
 
-### File: `src/components/MacValidator.tsx`
+### 3. ProvisioningPage Step Indicator Tests
 
-**Changes:**
+**File:** `src/components/ProvisioningPage.test.tsx` (expand)
 
-1. **Import shared utilities** instead of defining locally:
-   ```typescript
-   import { normalizeMac, validateMacFormat, isCompleteMac } from '@/utils/macUtils';
-   ```
+Test the step indicator logic:
 
-2. **Real-time formatting on input change:**
-   ```typescript
-   const handleInputChange = (value: string) => {
-     const normalized = normalizeMac(value);
-     setMac(normalized);
-     setError('');
-     setIsValid(false);
-   };
-   ```
-
-3. **Update placeholder** to show format flexibility:
-   ```typescript
-   placeholder="Enter MAC (any format)"
-   ```
-
-4. **Add helper text** below input:
-   ```typescript
-   <p className="text-xs text-muted-foreground">
-     Accepts: AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABB.CCDD.EEFF
-   </p>
-   ```
-
-5. **Increase maxLength** to accommodate longest format (17 chars for colon-separated):
-   ```typescript
-   maxLength={23} // Cisco format with dots: AABB.CCDD.EEFF = 14 chars, with extra room
-   ```
-
-6. **Simplify error handling** - remove format error (auto-corrected), keep only:
-   - Incomplete MAC (less than 12 hex digits)
-   - OUI not approved
-
-7. **Show completion indicator** while typing:
-   ```typescript
-   {isCompleteMac(mac) && !isValid && (
-     <span className="text-xs text-muted-foreground">
-       Press Validate to continue
-     </span>
-   )}
-   ```
-
----
-
-## Updated Component Structure
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  MAC Address                                                │
-│  ┌─────────────────────────────────────┐  ┌──────────────┐  │
-│  │ AA:BB:CC:DD:EE:FF                   │  │  Validate    │  │
-│  └─────────────────────────────────────┘  └──────────────┘  │
-│  Accepts: AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABB.CCDD   │
-│                                                             │
-│  ✓ MAC validated successfully                               │
-└─────────────────────────────────────────────────────────────┘
+```typescript
+describe('ProvisioningPage step indicator', () => {
+  it('shows step 1 as active initially')
+  it('shows step 1 complete and step 2 active after MAC validated')
+  it('shows steps 1-2 complete and step 3 active during provisioning')
+  it('shows all three steps green with checkmarks on successful provisioning')
+})
 ```
 
 ---
 
-## Files to Modify
+## Files to Create/Modify
 
-| File | Changes |
-|------|---------|
-| `src/utils/macUtils.ts` | Add `isCompleteMac`, enhance `normalizeMac` for progressive formatting |
-| `src/utils/macUtils.test.ts` | Add test cases for all MAC formats |
-| `src/components/MacValidator.tsx` | Use shared utils, update UX, add helper text |
+| File | Action | Test Count |
+|------|--------|------------|
+| `src/components/MacStatusCard.test.tsx` | Expand | +12 tests |
+| `src/components/MacValidator.test.tsx` | Create | +14 tests |
+| `src/components/ProvisioningPage.test.tsx` | Expand | +4 tests |
 
 ---
 
-## Edge Cases Handled
+## Technical Details
 
-| Input | Normalized Output | Notes |
-|-------|-------------------|-------|
-| `aabbccddeeff` | `AA:BB:CC:DD:EE:FF` | No separators |
-| `AA-BB-CC-DD-EE-FF` | `AA:BB:CC:DD:EE:FF` | Windows format |
-| `AABB.CCDD.EEFF` | `AA:BB:CC:DD:EE:FF` | Cisco format |
-| `aa bb cc dd ee ff` | `AA:BB:CC:DD:EE:FF` | Space-separated |
-| `aabb` | `AA:BB` | Partial during typing |
-| `AA:BB:CC:` | `AA:BB:CC` | Trailing separator stripped |
-| `:::AABBCC:::` | `AA:BB:CC` | Extra separators ignored |
-| `ghij1234` | `12:34` | Non-hex chars stripped |
+### MacStatusCard Tests Structure
+
+```typescript
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { MacStatusCard, MacStatus } from './MacStatusCard';
+
+const createMockMac = (overrides: Partial<MacStatus> = {}): MacStatus => ({
+  mac: 'AA:BB:CC:DD:EE:FF',
+  configfile: 'r-2000-1000',
+  status: 'pending',
+  provisionState: 'pending',
+  ...overrides,
+});
+
+describe('MacStatusCard', () => {
+  describe('status badges', () => {
+    it('shows "Replaced" badge when provisioning complete with previous data', () => {
+      const mac = createMockMac({
+        status: 'found',
+        provisionState: 'complete',
+        currentData: { account: 'test', configfile: 'old-cfg', isp: 'isp' },
+      });
+      render(<MacStatusCard mac={mac} showProvisionState />);
+      expect(screen.getByText('Replaced')).toBeInTheDocument();
+    });
+  });
+
+  describe('contextual labels', () => {
+    it('shows "Previous Status" when provisioning is complete', () => {
+      const mac = createMockMac({ provisionState: 'complete' });
+      render(<MacStatusCard mac={mac} />);
+      expect(screen.getByText('Previous Status')).toBeInTheDocument();
+    });
+
+    it('shows "Current Status" when provisioning is not complete', () => {
+      const mac = createMockMac({ provisionState: 'pending' });
+      render(<MacStatusCard mac={mac} />);
+      expect(screen.getByText('Current Status')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### MacValidator Tests Structure
+
+```typescript
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MacValidator } from './MacValidator';
+
+const mockFetch = (approved: boolean) => {
+  return vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ approved_ouis: approved ? ['AABBCC'] : [] }),
+  });
+};
+
+describe('MacValidator', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('normalizes input as user types', async () => {
+    global.fetch = mockFetch(true);
+    const user = userEvent.setup();
+    const onValidated = vi.fn();
+    
+    render(<MacValidator onValidated={onValidated} />);
+    
+    const input = screen.getByPlaceholderText(/Enter MAC/);
+    await user.type(input, 'aabbccddeeff');
+    
+    expect(input).toHaveValue('AA:BB:CC:DD:EE:FF');
+  });
+
+  it('shows error for non-approved OUI', async () => {
+    global.fetch = mockFetch(false);
+    const user = userEvent.setup();
+    
+    render(<MacValidator onValidated={vi.fn()} />);
+    
+    const input = screen.getByPlaceholderText(/Enter MAC/);
+    await user.type(input, 'AABBCCDDEEFF');
+    await user.click(screen.getByText('Validate'));
+    
+    await waitFor(() => {
+      expect(screen.getByText(/not a known Viavi meter/)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### ProvisioningPage Step Indicator Tests
+
+```typescript
+describe('ProvisioningPage step indicator', () => {
+  it('shows all steps green on successful provisioning', async () => {
+    global.fetch = setupFetch({ approved: true });
+    vi.mocked(provisioningApi.searchByMac).mockResolvedValue([]);
+    vi.mocked(provisioningApi.addHsd).mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    render(<ProvisioningPage />);
+    
+    // Complete the flow
+    await typeAndValidate(user);
+    await user.click(screen.getByText('Provision MAC'));
+    
+    // All three checkmarks should be visible
+    await waitFor(() => {
+      const checkmarks = screen.getAllByTestId('check-circle-icon');
+      expect(checkmarks).toHaveLength(3);
+    });
+  });
+});
+```
+
+---
+
+## Test Execution
+
+After implementation, run tests with:
+```bash
+npm test
+```
+
+Or run specific test files:
+```bash
+npm test -- src/components/MacStatusCard.test.tsx
+npm test -- src/components/MacValidator.test.tsx
+```
 
