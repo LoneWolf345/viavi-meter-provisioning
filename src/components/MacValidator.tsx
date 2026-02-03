@@ -82,9 +82,6 @@ export function MacValidator({ onValidated, isLoading = false }: MacValidatorPro
           </Button>
         </div>
         
-        <p className="text-xs text-muted-foreground">
-          Accepts: AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABB.CCDD.EEFF
-        </p>
         
         {error && (
           <div className="flex items-center gap-2 text-sm text-destructive">
