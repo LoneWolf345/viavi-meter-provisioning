@@ -12,17 +12,24 @@ export function validateMacFormat(mac: string): boolean {
 
 /**
  * Normalizes MAC input to uppercase colon-separated format
+ * Supports: colons, hyphens, dots (Cisco), spaces, no separator
+ * Handles progressive formatting during typing
  */
 export function normalizeMac(input: string): string {
-  // Remove all non-hex characters, convert to uppercase
+  // Strip all non-hex characters and uppercase
   const cleaned = input.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
   
-  // Add colons every 2 characters if we have exactly 12 characters
-  if (cleaned.length === 12) {
-    return cleaned.match(/.{2}/g)?.join(':') || '';
-  }
-  
-  return input.toUpperCase().replace(/[^0-9A-F:]/g, '');
+  // Insert colons every 2 characters for what we have
+  const pairs = cleaned.match(/.{1,2}/g) || [];
+  return pairs.join(':');
+}
+
+/**
+ * Checks if the normalized MAC has complete 12 hex digits
+ */
+export function isCompleteMac(mac: string): boolean {
+  const hexOnly = mac.replace(/:/g, '');
+  return hexOnly.length === 12;
 }
 
 /**
