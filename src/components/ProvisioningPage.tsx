@@ -209,20 +209,43 @@ export function ProvisioningPage() {
       { key: 'status', label: 'Check Status' },
       { key: 'provisioning', label: 'Provision' },
     ];
+    
+    const currentStepIndex = steps.findIndex((s) => s.key === currentStep);
+    
+    const getStepStyle = (index: number, stepKey: string) => {
+      // Step 3 turns green when provisioning is complete
+      if (stepKey === 'provisioning' && mac?.provisionState === 'complete') {
+        return 'bg-success text-success-foreground';
+      }
+      // Current step is primary
+      if (currentStep === stepKey) {
+        return 'bg-primary text-primary-foreground';
+      }
+      // Past steps are green
+      if (currentStepIndex > index) {
+        return 'bg-success text-success-foreground';
+      }
+      // Future steps are muted
+      return 'bg-muted text-muted-foreground';
+    };
+    
+    const shouldShowCheckmark = (index: number, stepKey: string) => {
+      // Step 3 shows checkmark when provisioning is complete
+      if (stepKey === 'provisioning' && mac?.provisionState === 'complete') {
+        return true;
+      }
+      // Past steps show checkmark
+      return currentStepIndex > index;
+    };
+    
     return (
       <div className="flex items-center gap-2 mb-6">
         {steps.map((step, index) => (
           <div key={step.key} className="flex items-center gap-2">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                currentStep === step.key
-                  ? 'bg-primary text-primary-foreground'
-                  : steps.findIndex((s) => s.key === currentStep) > index
-                    ? 'bg-success text-success-foreground'
-                    : 'bg-muted text-muted-foreground'
-              }`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${getStepStyle(index, step.key)}`}
             >
-              {steps.findIndex((s) => s.key === currentStep) > index ? (
+              {shouldShowCheckmark(index, step.key) ? (
                 <CheckCircle className="h-4 w-4" />
               ) : (
                 index + 1
